@@ -38,14 +38,22 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 src/main.c \
+src/tim.c \
+src/dma.c \
+src/adc.c \
 src/usart.c \
 src/usbd_conf.c \
 src/usbd_desc.c \
 src/usbd_audio_if.c \
 src/stm32f4xx_it.c \
+drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
+drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
+drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
+drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c \
+drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s_ex.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
@@ -56,8 +64,6 @@ drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
-drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
