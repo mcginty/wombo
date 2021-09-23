@@ -1,4 +1,7 @@
 #include "main.h"
+#include "adc.h"
+#include "dma.h"
+#include "tim.h"
 #include "usart.h"
 #include "usbd_audio.h"
 #include <stdio.h>
@@ -6,7 +9,7 @@
 
 USBD_HandleTypeDef USBD_Device;
 AUDIO_STATUS_TypeDef audio_status;
-
+uint16_t uadc;
 
 void SystemClock_Config(void);
 
@@ -15,9 +18,13 @@ int main(void) {
   SystemClock_Config();
 
   MX_USART2_UART_Init();
-  printMsg("\r\nUSB Audio I2S Bridge\r\n");
+  printMsg("\r\nmixboi booting up.\r\n");
 
   bsp_init();
+
+  // ADC subsystems
+  MX_ADC1_Init();
+  printMsg("\r\nADC initialized\r\n");
 
   // Init Device Library
   USBD_Init(&USBD_Device, &AUDIO_Desc, 0);
@@ -27,6 +34,11 @@ int main(void) {
   USBD_AUDIO_RegisterInterface(&USBD_Device, &USBD_AUDIO_fops);
   // Start Device Process
   USBD_Start(&USBD_Device);
+  printMsg("\r\nUSBD Started\r\n");
+  // if (HAL_ADC_Start(&hadc1) != HAL_OK) {
+  //   printMsg("HAL_ADC_Start failed.");
+  // }
+  // printMsg("\r\nADC Started\r\n");
   
   while (1) {
     switch (audio_status.frequency) {
@@ -52,6 +64,16 @@ int main(void) {
           break;
     }
 
+    if (HAL_ADC_Start(&hadc1) != HAL_OK) {
+      printMsg("HAL_ADC_Start failed.");
+    }
+    if (HAL_ADC_PollForConversion(&hadc1, 250) == HAL_OK) {
+      uadc = HAL_ADC_GetValue(&hadc1);
+      printMsg("pot: %d\r\n", uadc);
+    } else {
+      printMsg("ADC error.\r\n");
+    }
+    HAL_ADC_Stop(&hadc1);
     HAL_Delay(100);
 #ifdef DEBUG_FEEDBACK_ENDPOINT // see Makefile C_DEFS
     // see USBD_AUDIO_SOF() in usbd_audio.c
@@ -197,6 +219,7 @@ void printMsg(char* format, ...) {
 
 void Error_Handler(void){
 	uint32_t counter;
+  printMsg("ERROR HAPPENED.");
 	while(1){
 		BSP_OnboardLED_Toggle();
 		counter = 0xFFFF;
