@@ -75,7 +75,7 @@ void    BSP_AUDIO_OUT_ChangeBuffer(uint16_t *pData, uint16_t size);
 uint8_t BSP_AUDIO_OUT_Pause(void);
 uint8_t BSP_AUDIO_OUT_Resume(void);
 uint8_t BSP_AUDIO_OUT_Stop(void);
-uint8_t BSP_AUDIO_OUT_SetVolume(int16_t volume);
+uint8_t BSP_AUDIO_OUT_SetVolume(uint16_t volume);
 void    BSP_AUDIO_OUT_SetFrequency(uint32_t audioFreq);
 uint8_t BSP_AUDIO_OUT_SetMute(uint8_t mute);
 void    BSP_AUDIO_OUT_DeInit(void);

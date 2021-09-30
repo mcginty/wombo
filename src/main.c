@@ -9,7 +9,6 @@
 
 USBD_HandleTypeDef USBD_Device;
 AUDIO_STATUS_TypeDef audio_status;
-uint16_t uadc;
 
 void SystemClock_Config(void);
 
@@ -35,10 +34,6 @@ int main(void) {
   // Start Device Process
   USBD_Start(&USBD_Device);
   printMsg("\r\nUSBD Started\r\n");
-  // if (HAL_ADC_Start(&hadc1) != HAL_OK) {
-  //   printMsg("HAL_ADC_Start failed.");
-  // }
-  // printMsg("\r\nADC Started\r\n");
   
   while (1) {
     switch (audio_status.frequency) {
@@ -67,32 +62,17 @@ int main(void) {
     if (HAL_ADC_Start(&hadc1) != HAL_OK) {
       printMsg("HAL_ADC_Start failed.");
     }
-    if (HAL_ADC_PollForConversion(&hadc1, 250) == HAL_OK) {
-      uadc = HAL_ADC_GetValue(&hadc1);
-      printMsg("pot: %d\r\n", uadc);
+    if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
+      uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
+      adcPotVal += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVal) / 50.0);
+      // printMsg("pot: %d\r\n", adcPotVal);
     } else {
       printMsg("ADC error.\r\n");
     }
     HAL_ADC_Stop(&hadc1);
-    HAL_Delay(100);
-#ifdef DEBUG_FEEDBACK_ENDPOINT // see Makefile C_DEFS
-    // see USBD_AUDIO_SOF() in usbd_audio.c
-	if (BtnPressed) {
-		BtnPressed = 0;
-		printMsg("DbgOptimalWritableSamples = %d\r\nDbgSafeZoneWritableSamples = %d\r\n", AUDIO_TOTAL_BUF_SIZE/(2*6), AUDIO_BUF_SAFEZONE_SAMPLES);
-		printMsg("DbgMaxWritableSamples = %d\r\nDbgMinWritableSamples = %d\r\n\r\n", DbgMaxWritableSamples, DbgMinWritableSamples);
-		int count = 256;
-		while (count--){
-			// print oldest to newest
-			printMsg("%d %d %f\r\n", DbgSofHistory[DbgIndex], DbgWritableSampleHistory[DbgIndex], DbgFeedbackHistory[DbgIndex]);
-			DbgIndex++;
-			}
-		}
-#endif
-
+    HAL_Delay(1);
   }
 }
-
 
 // STM32F411CEU6 versus STM32F401CCU6 "Black Pill" 
 

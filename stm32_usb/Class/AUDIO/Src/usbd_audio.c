@@ -280,6 +280,7 @@ volatile uint32_t fb_nom = AUDIO_FB_DEFAULT;
 volatile uint32_t fb_value = AUDIO_FB_DEFAULT;
 volatile uint32_t audio_buf_writable_samples_last = AUDIO_TOTAL_BUF_SIZE /(2*6);
 
+uint16_t adcPotVal = 0;
 volatile uint8_t fb_data[3] = {
     (uint8_t)((AUDIO_FB_DEFAULT >> 8) & 0x000000FF),
     (uint8_t)((AUDIO_FB_DEFAULT >> 16) & 0x000000FF),
@@ -747,6 +748,15 @@ inline int32_t USBD_AUDIO_Volume_Ctrl(int32_t sample, int32_t shift_3dB){
 // => outgoing I2S transmit data buffer : uint16_t array
 // Each I2S stereo sample is encoded as {hi_L:mid_L}, {lo_L:0x00}, {hi_R:mid_R}, {lo_R:0x00}
 
+static float s24_to_float(uint8_t *buf) {
+  int32_t s32 = ((buf[2] << 24) | (buf[1] << 16) | (buf[0] << 8)) >> 8;
+  return ((float)s32) / (float)0x7fffff;
+}
+
+static int32_t float_to_s32(float sample) {
+  return (int32_t)(sample * (float)0x7fffff);
+}
+
 static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
 	USBD_AUDIO_HandleTypeDef* haudio;
 	haudio = (USBD_AUDIO_HandleTypeDef*)pdev->pClassData;
@@ -758,27 +768,25 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
 		// Ignore strangely large packets
 		if (curr_length > AUDIO_OUT_PACKET_24B) {
 			curr_length = 0U;
-			}
+    }
 
 		uint32_t tmpbuf_ptr = 0U;
 		uint32_t num_samples = curr_length / 6; // 3bytes per sample
 
 		for (int i = 0; i < num_samples; i++) {
 			UN32 sample;
-			sample.b[0] = tmpbuf[tmpbuf_ptr]; // lsb
-			sample.b[1] = tmpbuf[tmpbuf_ptr+1];
-			sample.b[2] = tmpbuf[tmpbuf_ptr+2]; // msb
-			sample.b[3] = sample.b[2] & 0x80 ? 0xFF : 0x00; // sign extend to 32bits
+
+      float fsample = s24_to_float(&tmpbuf[tmpbuf_ptr]);
+      fsample *= (float) adcPotVal / 65536.0;
+      sample.s = float_to_s32(fsample);
 			sample.s = USBD_AUDIO_Volume_Ctrl(sample.s,haudio->vol_3dB_shift);
 
 			haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];
 			haudio->buffer[haudio->wr_ptr++] = ((uint16_t)sample.b[0]) << 8;
 
-			sample.b[0] = tmpbuf[tmpbuf_ptr+3]; // lsb
-			sample.b[1] = tmpbuf[tmpbuf_ptr+4];
-			sample.b[2] = tmpbuf[tmpbuf_ptr+5]; // msb
-			sample.b[3] = sample.b[2] & 0x80 ? 0xFF : 0x00; // sign extend to 32bits
-
+      fsample = s24_to_float(&tmpbuf[tmpbuf_ptr+3]);
+      fsample *= (float) adcPotVal / 65536.0;
+      sample.s = float_to_s32(fsample);
 			sample.s = USBD_AUDIO_Volume_Ctrl(sample.s,haudio->vol_3dB_shift);
 
 			haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];

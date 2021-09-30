@@ -24,7 +24,7 @@ const I2S_CLK_CONFIG I2S_Clk_Config24[3]  = {
 
 I2S_HandleTypeDef  haudio_i2s;
 DMA_HandleTypeDef hdma_i2sTx;
-
+uint16_t bsp_volume;
 
 static void I2Sx_Init(uint32_t AudioFreq);
 static void I2Sx_DeInit(void);
@@ -79,7 +79,7 @@ uint8_t BSP_AUDIO_OUT_Play(uint16_t* pBuffer, uint32_t Size) {
 	uint8_t ret = AUDIO_OK;
 	AUDIO_MUTE_OFF();
 	// I2s transmit of 24bit data requires number of words
-	if (HAL_I2S_Transmit_DMA(&haudio_i2s, pBuffer, Size/4) != HAL_OK)    {
+	if (HAL_I2S_Transmit_DMA(&haudio_i2s, pBuffer, Size/4) != HAL_OK) {
 		ret = AUDIO_ERROR;
     	}
 	return ret;
@@ -152,7 +152,8 @@ uint8_t BSP_AUDIO_OUT_Stop(void) {
   * @param  Volume: Volume level to be set in percentage from 0% to 100%
   * @retval AUDIO_OK if correct communication, else wrong communication
   */
-uint8_t BSP_AUDIO_OUT_SetVolume(int16_t volume){
+uint8_t BSP_AUDIO_OUT_SetVolume(uint16_t volume) {
+  bsp_volume = volume;
 	// volume control is implemented by scaling the data, in usbd_audio.c
 	return AUDIO_OK;
 	}
