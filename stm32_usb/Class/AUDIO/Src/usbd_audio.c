@@ -764,16 +764,24 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
 		uint32_t num_samples = curr_length / sample_size;
 
 		for (int i = 0; i < num_samples; i++) {
-			UN32 sample;
+			float in_samples[USB_AUDIO_CHANNELS];
+      float dsp_out[2];
+			UN32 out_samples[2];
+
+      for (int j = 0; j < USB_AUDIO_CHANNELS; j++) {
+        in_samples[j] = s24_to_float(&tmpbuf[tmpbuf_ptr + (j * USB_AUDIO_BYTES_PER_SAMPLE)]);
+      }
+
+      float crossfade = (float) adcPotVal / 65536.0;
+      dsp_out[0] = in_samples[0] * (1.0 - crossfade) + in_samples[2] * (crossfade);
+      dsp_out[1] = in_samples[1] * (1.0 - crossfade) + in_samples[3] * (crossfade);
 
       for (int j = 0; j < 2; j++) {
-        float fsample = s24_to_float(&tmpbuf[tmpbuf_ptr + (j * USB_AUDIO_BYTES_PER_SAMPLE)]);
-        fsample *= (float) adcPotVal / 65536.0;
-        sample.s = float_to_s32(fsample);
-        sample.s = USBD_AUDIO_Volume_Ctrl(sample.s,haudio->vol_3dB_shift);
+        out_samples[j].s = float_to_s32(dsp_out[j]);
+        out_samples[j].s = USBD_AUDIO_Volume_Ctrl(out_samples[j].s,haudio->vol_3dB_shift);
 
-        haudio->buffer[haudio->wr_ptr++] = (((uint16_t)sample.b[2]) << 8) | (uint16_t)sample.b[1];
-        haudio->buffer[haudio->wr_ptr++] = ((uint16_t)sample.b[0]) << 8;
+        haudio->buffer[haudio->wr_ptr++] = (((uint16_t)out_samples[j].b[2]) << 8) | (uint16_t)out_samples[j].b[1];
+        haudio->buffer[haudio->wr_ptr++] = ((uint16_t)out_samples[j].b[0]) << 8;
       }
 
 			tmpbuf_ptr += sample_size;
