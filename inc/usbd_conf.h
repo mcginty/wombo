@@ -59,8 +59,8 @@
 #define USBD_DEBUG_LEVEL                      0
 
 /* AUDIO Class Config */
-#define USBD_AUDIO_FREQ_DEFAULT               96000
-#define USBD_AUDIO_FREQ_MAX                   96000
+#define USBD_AUDIO_FREQ_DEFAULT               48000
+#define USBD_AUDIO_FREQ_MAX                   48000
 #define USBD_AUDIO_BIT_DEPTH_DEFAULT 			24
 
 /* Memory management macros */   

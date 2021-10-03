@@ -26,6 +26,8 @@
 
 #include  "usbd_ioreq.h"
 
+#define USB_AUDIO_CHANNELS 4
+#define USB_AUDIO_BYTES_PER_SAMPLE 3
 
 #ifndef USBD_AUDIO_FREQ_DEFAULT
 #define USBD_AUDIO_FREQ_DEFAULT                       96000U
@@ -135,7 +137,7 @@
 // Max packet size: (freq / 1000 + extra_samples) * channels * bytes_per_sample
 // e.g. 96kHz, 24bit : (96000 / 1000 + 1) * 2(stereo) * 3(24bit) = 582 bytes
 
-#define AUDIO_OUT_PACKET_24B                          ((uint16_t)((USBD_AUDIO_FREQ_MAX / 1000U + 1) * 2U * 3U))
+#define AUDIO_OUT_PACKET_24B                          ((uint16_t)((USBD_AUDIO_FREQ_MAX / 1000U + 1) * 4U * 3U))
 
 /* Input endpoint is for feedback. See USB 1.1 Spec, 5.10.4.2 Feedback. */
 #define AUDIO_IN_PACKET                               3U
@@ -146,7 +148,7 @@
 #define AUDIO_OUT_PACKET_NUM                          8U
 
 // Total size of the audio transfer buffer
-#define AUDIO_TOTAL_BUF_SIZE                          ((uint16_t)((USBD_AUDIO_FREQ_MAX / 1000U + 1) * 2U * 3U * AUDIO_OUT_PACKET_NUM))
+#define AUDIO_TOTAL_BUF_SIZE                          ((uint16_t)((USBD_AUDIO_FREQ_MAX / 1000U + 1) * 4U * 3U * AUDIO_OUT_PACKET_NUM))
 
 
 // The minimum distance between rd_ptr and wr_ptr to prevent overwriting unplayed buffer
