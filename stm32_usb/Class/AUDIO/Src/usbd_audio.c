@@ -272,7 +272,7 @@ volatile uint32_t fb_nom = AUDIO_FB_DEFAULT;
 volatile uint32_t fb_value = AUDIO_FB_DEFAULT;
 volatile uint32_t audio_buf_writable_samples_last = AUDIO_TOTAL_BUF_SIZE /(2*6);
 
-uint16_t adcPotVals[2] = { 0, 0 };
+__IO uint16_t adcPotVals[2] = { 0, 0 };
 volatile uint8_t fb_data[3] = {
     (uint8_t)((AUDIO_FB_DEFAULT >> 8) & 0x000000FF),
     (uint8_t)((AUDIO_FB_DEFAULT >> 16) & 0x000000FF),

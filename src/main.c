@@ -22,6 +22,7 @@ int main(void) {
   bsp_init();
 
   // ADC subsystems
+  MX_DMA_Init();
   MX_ADC1_Init();
   printMsg("\r\nADC initialized\r\n");
 
@@ -34,6 +35,11 @@ int main(void) {
   // Start Device Process
   USBD_Start(&USBD_Device);
   printMsg("\r\nUSBD Started\r\n");
+
+  if (HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adcPotVals, 2) != HAL_OK) {
+    printMsg("\r\nHAL ADC DMA init failed.");
+  }
+  printMsg("\r\nHAL ADC DMA started.\r\n");
   
   while (1) {
     switch (audio_status.frequency) {
@@ -59,19 +65,20 @@ int main(void) {
           break;
     }
 
-    if (HAL_ADC_Start(&hadc1) != HAL_OK) {
-      printMsg("HAL_ADC_Start failed.");
-    }
+    // if (HAL_ADC_Start(&hadc1) != HAL_OK) {
+    //   printMsg("HAL_ADC_Start failed.");
+    // }
 
-    for (int i = 0; i < 2; i++) {
-      if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
-        uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
-        adcPotVals[i] += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVals[i]) / 50.0);
-      } else {
-        printMsg("ADC error.\r\n");
-      }
-    }
-    HAL_ADC_Stop(&hadc1);
+    // for (int i = 0; i < 2; i++) {
+    //   if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
+    //     uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
+    //     adcPotVals[i] += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVals[i]) / 50.0);
+    //   } else {
+    //     printMsg("ADC error.\r\n");
+    //   }
+    // }
+    // HAL_ADC_Stop(&hadc1);
+    printMsg("ADC1 %d. ADC2 %d.\r\n", adcPotVals[0], adcPotVals[1]);
     HAL_Delay(1);
   }
 }
@@ -224,3 +231,43 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
+{
+  /* Turn LED4 on: Transfer process is correct */
+  // printMsg("\r\nCONVCOMPL\r\n");
+}
+
+/******************************************************************************/
+/* STM32F4xx Peripheral Interrupt Handlers                                    */
+/* Add here the Interrupt Handlers for the used peripherals.                  */
+/* For the available peripheral interrupt handler names,                      */
+/* please refer to the startup file (startup_stm32f4xx.s).                    */
+/******************************************************************************/
+
+/**
+  * @brief This function handles ADC1 global interrupt.
+  */
+void ADC_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC_IRQn 0 */
+
+  /* USER CODE END ADC_IRQn 0 */
+  HAL_ADC_IRQHandler(&hadc1);
+  /* USER CODE BEGIN ADC_IRQn 1 */
+
+  /* USER CODE END ADC_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA2 stream0 global interrupt.
+  */
+void DMA2_Stream0_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Stream0_IRQn 0 */
+
+  /* USER CODE END DMA2_Stream0_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_adc1);
+  /* USER CODE BEGIN DMA2_Stream0_IRQn 1 */
+
+  /* USER CODE END DMA2_Stream0_IRQn 1 */
+}

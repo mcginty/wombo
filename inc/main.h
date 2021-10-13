@@ -35,7 +35,9 @@ extern "C" {
 
 void Error_Handler(void);
 void printMsg(char* format, ...);
-
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle);
+void ADC_IRQHandler(void);
+void DMA2_Stream0_IRQHandler(void);
 
 #ifdef __cplusplus
 }
