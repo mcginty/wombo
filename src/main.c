@@ -62,12 +62,14 @@ int main(void) {
     if (HAL_ADC_Start(&hadc1) != HAL_OK) {
       printMsg("HAL_ADC_Start failed.");
     }
-    if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
-      uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
-      adcPotVal += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVal) / 50.0);
-      // printMsg("pot: %d\r\n", adcPotVal);
-    } else {
-      printMsg("ADC error.\r\n");
+
+    for (int i = 0; i < 2; i++) {
+      if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
+        uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
+        adcPotVals[i] += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVals[i]) / 50.0);
+      } else {
+        printMsg("ADC error.\r\n");
+      }
     }
     HAL_ADC_Stop(&hadc1);
     HAL_Delay(1);

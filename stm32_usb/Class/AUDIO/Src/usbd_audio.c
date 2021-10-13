@@ -272,7 +272,7 @@ volatile uint32_t fb_nom = AUDIO_FB_DEFAULT;
 volatile uint32_t fb_value = AUDIO_FB_DEFAULT;
 volatile uint32_t audio_buf_writable_samples_last = AUDIO_TOTAL_BUF_SIZE /(2*6);
 
-uint16_t adcPotVal = 0;
+uint16_t adcPotVals[2] = { 0, 0 };
 volatile uint8_t fb_data[3] = {
     (uint8_t)((AUDIO_FB_DEFAULT >> 8) & 0x000000FF),
     (uint8_t)((AUDIO_FB_DEFAULT >> 16) & 0x000000FF),
@@ -771,9 +771,13 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
         in_samples[j] = s24_to_float(&tmpbuf[tmpbuf_ptr + (j * USB_AUDIO_BYTES_PER_SAMPLE)]);
       }
 
-      float crossfade = (float) adcPotVal / 65536.0;
-      dsp_out[0] = in_samples[0] * (1.0 - crossfade) + in_samples[2] * (crossfade);
-      dsp_out[1] = in_samples[1] * (1.0 - crossfade) + in_samples[3] * (crossfade);
+      // float crossfade = (float) adcPotVals[0] / 65536.0;
+      // dsp_out[0] = in_samples[0] * (1.0 - crossfade) + in_samples[2] * (crossfade);
+      // dsp_out[1] = in_samples[1] * (1.0 - crossfade) + in_samples[3] * (crossfade);
+      // float crossfade = (float) adcPotVals[0] / 65536.0;
+      float fades[2] = { adcPotVals[0] / 65536.0, adcPotVals[1] / 65536.0 };
+      dsp_out[0] = in_samples[0] * (fades[0]) + in_samples[2] * (fades[0]);
+      dsp_out[1] = in_samples[1] * (fades[1]) + in_samples[3] * (fades[1]);
 
       for (int j = 0; j < 2; j++) {
         out_samples[j].s = float_to_s32(dsp_out[j]);
