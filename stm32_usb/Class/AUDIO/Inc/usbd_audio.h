@@ -73,7 +73,7 @@
 
 #define SOF_RATE                                      0x02U
 
-#define USB_AUDIO_CONFIG_DESC_SIZ                     124
+#define USB_AUDIO_CONFIG_DESC_SIZ                     121
 
 #define AUDIO_INTERFACE_DESC_SIZE                     0x09U
 #define USB_AUDIO_DESC_SIZ                            0x09U
