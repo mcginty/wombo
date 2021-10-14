@@ -6,9 +6,17 @@
 #include "usbd_audio.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <math.h>
+
+// Amount to shave off the bottom and top from the potentiometer to hit "absolute 0% and 100%"
+// The value of 20 rougly corresponds to 0.05% for a 12-bit ADC.
+#define POTENTIOMETER_SHAVE 20
+
+#define CLAMP(x, lower, upper) (MIN(upper, MAX(x, lower)))
 
 USBD_HandleTypeDef USBD_Device;
 AUDIO_STATUS_TypeDef audio_status;
+__IO uint16_t adcPotVals[2] = { 0, 0 };
 
 void SystemClock_Config(void);
 
@@ -40,6 +48,8 @@ int main(void) {
     printMsg("\r\nHAL ADC DMA init failed.");
   }
   printMsg("\r\nHAL ADC DMA started.\r\n");
+
+  uint32_t counter = 0;
   
   while (1) {
     switch (audio_status.frequency) {
@@ -65,21 +75,18 @@ int main(void) {
           break;
     }
 
+    if (counter % 300 == 69) {
+      printMsg("chan 1: %d, chan 2: %d (logs: %f, %f)\r\n", adcPotVals[0], adcPotVals[1], logChannelLevels[0], logChannelLevels[1]);
+    }
+
     // if (HAL_ADC_Start(&hadc1) != HAL_OK) {
     //   printMsg("HAL_ADC_Start failed.");
     // }
 
-    // for (int i = 0; i < 2; i++) {
-    //   if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
-    //     uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
-    //     adcPotVals[i] += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVals[i]) / 50.0);
-    //   } else {
-    //     printMsg("ADC error.\r\n");
-    //   }
-    // }
     // HAL_ADC_Stop(&hadc1);
-    printMsg("ADC1 %d. ADC2 %d.\r\n", adcPotVals[0], adcPotVals[1]);
+    // printMsg("ADC1 %d. ADC2 %d.\r\n", adcPotVals[0], adcPotVals[1]);
     HAL_Delay(1);
+    counter++;
   }
 }
 
@@ -233,8 +240,23 @@ void assert_failed(uint8_t *file, uint32_t line)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
+    // for (int i = 0; i < 2; i++) {
+    //   if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
+    //     uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
+    //     adcPotVals[i] += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVals[i]) / 50.0);
+    //   } else {
+    //     printMsg("ADC error.\r\n");
+    //   }
+    // }
   /* Turn LED4 on: Transfer process is correct */
-  // printMsg("\r\nCONVCOMPL\r\n");
+  for (int i = 0; i < 2; i++) {
+    // Shave off 20 LSBs on both sides (~0.05%) for resistor tolerances.
+    int32_t shaved = (adcPotVals[i] - POTENTIOMETER_SHAVE);
+    float floatVal = CLAMP(((float)shaved / (4095.0 - (float)(POTENTIOMETER_SHAVE*2))), 0.0, 1.0);
+    logChannelLevels[i] += (floatVal - logChannelLevels[i]) / 30.0;
+    // logChannelLevels[i] = powf(floatVal, 2);
+  }
+  // printMsg("channel levels: %d, %d\r\n", channelLevels[0], channelLevels[1]);
 }
 
 /******************************************************************************/

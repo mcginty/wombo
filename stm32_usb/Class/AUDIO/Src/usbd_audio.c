@@ -31,6 +31,7 @@
   ******************************************************************************
   */
 
+#include "math.h"
 #include "usbd_audio.h"
 #include "usbd_ctlreq.h"
 #include "bsp_audio.h"
@@ -49,6 +50,8 @@
 
 // DbgFeedbackHistory is limited to +/- 1kHz
 #define  AUDIO_FB_DELTA_MAX (uint32_t)(1 << 22)
+
+#define LOG_VOLUME(vol) expf(6.908 * vol) / 1000.0
 
 static uint8_t USBD_AUDIO_Init(USBD_HandleTypeDef* pdev, uint8_t cfgidx);
 static uint8_t USBD_AUDIO_DeInit(USBD_HandleTypeDef* pdev, uint8_t cfgidx);
@@ -272,7 +275,8 @@ volatile uint32_t fb_nom = AUDIO_FB_DEFAULT;
 volatile uint32_t fb_value = AUDIO_FB_DEFAULT;
 volatile uint32_t audio_buf_writable_samples_last = AUDIO_TOTAL_BUF_SIZE /(2*6);
 
-__IO uint16_t adcPotVals[2] = { 0, 0 };
+__IO float channelLevels[2] = { 0, 0 };
+__IO float logChannelLevels[2] = { 0, 0 };
 volatile uint8_t fb_data[3] = {
     (uint8_t)((AUDIO_FB_DEFAULT >> 8) & 0x000000FF),
     (uint8_t)((AUDIO_FB_DEFAULT >> 16) & 0x000000FF),
@@ -770,18 +774,20 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
       for (int j = 0; j < USB_AUDIO_CHANNELS; j++) {
         in_samples[j] = s24_to_float(&tmpbuf[tmpbuf_ptr + (j * USB_AUDIO_BYTES_PER_SAMPLE)]);
       }
+      // float fades[2];
+      // for (int j = 0; j < 2; j++) {
+      //   float normalized = channelLevels[j] / 65536.0;
+      //   // printMsg("normalized: %f\n", normalized);
+      //   // fades[j] = expf(5.757 * normalized) / 316.23;
+      //   fades[j] = normalized;
+      // }
 
-      // float crossfade = (float) adcPotVals[0] / 65536.0;
-      // dsp_out[0] = in_samples[0] * (1.0 - crossfade) + in_samples[2] * (crossfade);
-      // dsp_out[1] = in_samples[1] * (1.0 - crossfade) + in_samples[3] * (crossfade);
-      // float crossfade = (float) adcPotVals[0] / 65536.0;
-      float fades[2] = { adcPotVals[0] / 65536.0, adcPotVals[1] / 65536.0 };
-      dsp_out[0] = in_samples[0] * (fades[0]) + in_samples[2] * (fades[0]);
-      dsp_out[1] = in_samples[1] * (fades[1]) + in_samples[3] * (fades[1]);
+      dsp_out[0] = (in_samples[0] * logChannelLevels[0]) + (in_samples[2] * logChannelLevels[1]);
+      dsp_out[1] = (in_samples[1] * logChannelLevels[0]) + (in_samples[3] * logChannelLevels[1]);
 
       for (int j = 0; j < 2; j++) {
         out_samples[j].s = float_to_s32(dsp_out[j]);
-        out_samples[j].s = USBD_AUDIO_Volume_Ctrl(out_samples[j].s,haudio->vol_3dB_shift);
+        // out_samples[j].s = USBD_AUDIO_Volume_Ctrl(out_samples[j].s,haudio->vol_3dB_shift);
 
         haudio->buffer[haudio->wr_ptr++] = (((uint16_t)out_samples[j].b[2]) << 8) | (uint16_t)out_samples[j].b[1];
         haudio->buffer[haudio->wr_ptr++] = ((uint16_t)out_samples[j].b[0]) << 8;

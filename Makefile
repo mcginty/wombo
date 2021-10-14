@@ -142,6 +142,7 @@ C_INCLUDES =  \
 -Istm32_usb/Class/AUDIO/Inc \
 -Idrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -Idrivers/CMSIS/Include \
+-Idrivers/CMSIS/DSP/Include \
 -Idrivers/BSP
 
 
@@ -164,8 +165,8 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 #######################################
 
 # libraries
-LIBS = -lc -lm -lnosys 
-LIBDIR = 
+LIBS = -lc -lm -lnosys -larm_cortexM4lf_math
+LIBDIR = -L ./libs
 LDFLAGS = $(MCU) -specs=nano.specs  -u _printf_float -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all

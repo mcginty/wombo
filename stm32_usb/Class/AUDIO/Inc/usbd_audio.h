@@ -225,7 +225,8 @@ extern volatile float     DbgFeedbackHistory[];
 extern volatile uint8_t   DbgIndex;
 #endif
 
-extern __IO uint16_t adcPotVals[2];
+extern __IO float channelLevels[2];
+extern __IO float logChannelLevels[2];
 extern USBD_ClassTypeDef  USBD_AUDIO;
 #define USBD_AUDIO_CLASS    &USBD_AUDIO
 
