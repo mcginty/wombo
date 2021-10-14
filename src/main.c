@@ -238,25 +238,14 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
+// Called when the ADC has a successful DMA write.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
-    // for (int i = 0; i < 2; i++) {
-    //   if (HAL_ADC_PollForConversion(&hadc1, 1) == HAL_OK) {
-    //     uint16_t newValue = HAL_ADC_GetValue(&hadc1) * 16; // convert 12-bit adc to 16-bit amount
-    //     adcPotVals[i] += (int32_t)((float)((int32_t)newValue - (int32_t)adcPotVals[i]) / 50.0);
-    //   } else {
-    //     printMsg("ADC error.\r\n");
-    //   }
-    // }
-  /* Turn LED4 on: Transfer process is correct */
   for (int i = 0; i < 2; i++) {
-    // Shave off 20 LSBs on both sides (~0.05%) for resistor tolerances.
     int32_t shaved = (adcPotVals[i] - POTENTIOMETER_SHAVE);
-    float floatVal = CLAMP(((float)shaved / (4095.0 - (float)(POTENTIOMETER_SHAVE*2))), 0.0, 1.0);
+    float floatVal = CLAMP(((float)shaved / (4095.0 - (float)(POTENTIOMETER_SHAVE * 2))), 0.0, 1.0);
     logChannelLevels[i] += (floatVal - logChannelLevels[i]) / 30.0;
-    // logChannelLevels[i] = powf(floatVal, 2);
   }
-  // printMsg("channel levels: %d, %d\r\n", channelLevels[0], channelLevels[1]);
 }
 
 /******************************************************************************/
