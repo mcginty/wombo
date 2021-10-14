@@ -36,7 +36,6 @@
 #include "usbd_ctlreq.h"
 #include "bsp_audio.h"
 
-
 #define AUDIO_SAMPLE_FREQ(frq) (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
 
  // Max packet size: (freq / 1000 + extra_samples) * channels * bytes_per_sample
@@ -774,20 +773,13 @@ static uint8_t USBD_AUDIO_DataOut(USBD_HandleTypeDef* pdev,  uint8_t epnum){
       for (int j = 0; j < USB_AUDIO_CHANNELS; j++) {
         in_samples[j] = s24_to_float(&tmpbuf[tmpbuf_ptr + (j * USB_AUDIO_BYTES_PER_SAMPLE)]);
       }
-      // float fades[2];
-      // for (int j = 0; j < 2; j++) {
-      //   float normalized = channelLevels[j] / 65536.0;
-      //   // printMsg("normalized: %f\n", normalized);
-      //   // fades[j] = expf(5.757 * normalized) / 316.23;
-      //   fades[j] = normalized;
-      // }
 
       dsp_out[0] = (in_samples[0] * logChannelLevels[0]) + (in_samples[2] * logChannelLevels[1]);
       dsp_out[1] = (in_samples[1] * logChannelLevels[0]) + (in_samples[3] * logChannelLevels[1]);
 
       for (int j = 0; j < 2; j++) {
         out_samples[j].s = float_to_s32(dsp_out[j]);
-        // out_samples[j].s = USBD_AUDIO_Volume_Ctrl(out_samples[j].s,haudio->vol_3dB_shift);
+        out_samples[j].s = USBD_AUDIO_Volume_Ctrl(out_samples[j].s,haudio->vol_3dB_shift);
 
         haudio->buffer[haudio->wr_ptr++] = (((uint16_t)out_samples[j].b[2]) << 8) | (uint16_t)out_samples[j].b[1];
         haudio->buffer[haudio->wr_ptr++] = ((uint16_t)out_samples[j].b[0]) << 8;
